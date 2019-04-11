@@ -10,3 +10,34 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 
+```{r}
+acc <- read.csv("https://raw.githubusercontent.com/xdaiISU/ds202materials/master/hwlabs/fars2017/accident.csv", stringsAsFactors = FALSE)
+per <- read.csv("https://raw.githubusercontent.com/xdaiISU/ds202materials/master/hwlabs/fars2017/person.csv", stringsAsFactors = FALSE)
+```
+
+are there some days of the week where more accidents happen than on others (use variable DAY_WEEK)?
+what time of the day do accidents happen (use variable HOUR)?
+what is the number of accidents with at least one drunk driver (use variable DRUNK_DR)?
+
+```{r}
+ggplot(acc, aes(x=DAY_WEEK))+ geom_histogram() + scale_x_continuous(breaks = seq(1,7,1), labels = c("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday")) + xlab("Day of the Week") + ylab("Number of Accidents")
+```
+
+
+More accidents happen on Saturday and Sunday than any other days of the week.
+
+```{r}
+library(dplyr)
+dat <- filter(acc, acc$HOUR <= 24)
+ggplot(dat, aes(x=HOUR)) + geom_histogram() + scale_x_continuous(breaks = seq(0,24,1)) + xlab("Hour of Day") + ylab("Number of Accidents")
+```
+
+
+The most accidents happen in the evening, between 6pm and 9pm.
+
+```{r}
+drunk <- filter(acc, acc$DRUNK_DR >= 1)
+drunk %>% summarise(numAcc = n())
+```
+
+There have been 8,769 accidents with at least one drunk driver.
