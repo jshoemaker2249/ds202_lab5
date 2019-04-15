@@ -64,7 +64,7 @@ ggplot(dat, aes(x=DAY_WEEK))+ geom_histogram() + scale_x_continuous(breaks = seq
 
 ```{r}
 filter(dat, dat$HOUR <= 24) %>% group_by(HOUR) %>% summarise(count = n()) 
-dat1 <- filter(dat1, dat1$HOUR <= 24)
+dat1 <- filter(dat, dat$HOUR <= 24)
 ggplot(dat1, aes(x = HOUR)) + geom_histogram() + scale_x_continuous(breaks = seq(0,24,1)) + xlab("Hour of Day") + ylab("Number of Accidents")
 ```
 
@@ -84,9 +84,10 @@ Visualize the number of accidents in each county using a choropleth map. To do t
 Can you find seasonal trends in accident occurrences in different states? Is summer or winter more dangerous? Why?
 
 ```{r}
-glcs <- read_excel("FRPP GLC United States.xlsx", skip = 1)
+glcs <- readxl::read_excel("FRPP GLC United States.xlsx", skip = 1)
 library(tidyverse) 
 library(lubridate)
+library(maps)
 counties <- map_data('county')
 glcs$region <- tolower(glcs$`State Name`)
 glcs <- select(glcs, -`State Name`)
