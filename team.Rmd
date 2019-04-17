@@ -75,3 +75,42 @@ dat$SEX <- ifelse(dat$SEX == 8, 3, dat$SEX)
 dat$SEX <- ifelse(dat$SEX == 9, 4, dat$SEX)
 ggplot(dat, aes(x=SEX)) + geom_histogram() + scale_x_continuous(breaks = seq(1,4,1), labels = c("Male", "Female","Not Reported", "Unknown")) + ylab("Number of Accidents")
 ```
+
+
+
+Now plot a choropleth map of accidents on a county level
+Read the description for the STATE and COUNTY columns in the FARS manual.
+The state & county codes are Geographic Locator Codes (GLCs) from the General Services Administration’s (GSA) publication
+Use readxl::read_xlsx to read in the GLCs
+Visualize the number of accidents in each county using a choropleth map. To do this, you need to join the accident data, GLCs, and appropriate map data.
+Can you find seasonal trends in accident occurrences in different states? Is summer or winter more dangerous? Why?
+
+```{r}
+glcs <- readxl::read_excel("FRPP GLC United States.xlsx", skip = 1)
+library(tidyverse) 
+library(lubridate)
+library(maps)
+counties <- map_data('county')
+
+glcs1<- glcs
+acc1 <- acc 
+counties1 <- counties
+
+glcs1$STATE <- glcs1$`State Code`
+glcs1$COUNTY <- glcs1$`County Code`
+
+glcs1 <- glcs1 %>% select("STATE", "State Name", "COUNTY", "County Name")
+acc1 <- acc1 %>% select("STATE", "COUNTY", "ST_CASE")
+
+geo1 <- acc1 %>% join(glcs1)
+geo1 <- geo1 %>% distinct()
+geo1$region <- geo1$`State Name`
+geo1$subregion <- geo1$`County Name`
+geo1 <- geo1 %>% select(-c("STATE", "COUNTY", "State Name", "County Name"))
+geo1$region <- tolower(geo1$region)
+geo1$subregion <- tolower(geo1$subregion)
+glcs_acc <- geo1 %>% group_by(region, subregion) %>% summarise(numAcc = n())
+final <- counties1 %>% join(glcs_acc)
+
+ggplot(final, aes(x=long, y=lat, fill=numAcc)) + geom_polygon(aes(group=group)) + xlab("Longitude") + ylab("Latitude") + labs(fill = "Number of Accidents")
+```
