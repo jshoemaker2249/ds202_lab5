@@ -85,32 +85,59 @@ Use readxl::read_xlsx to read in the GLCs
 Visualize the number of accidents in each county using a choropleth map. To do this, you need to join the accident data, GLCs, and appropriate map data.
 Can you find seasonal trends in accident occurrences in different states? Is summer or winter more dangerous? Why?
 
+
+Q1: Use readxl::read_xlsx to read in the GLCs
 ```{r}
-glcs <- readxl::read_excel("FRPP GLC United States.xlsx", skip = 1)
-library(tidyverse) 
-library(lubridate)
-library(maps)
+#help(read_xlsx)
+#str(GLCs)
+GLCs <-  readxl::read_xlsx("FRPP GLC United States.xlsx", skip = 1)
+
+```
+
+
+Connecting Data and Make Maps:
+Q2: Now plot a choropleth map of accidents on a county level
+```{r}
+#Draft:ggplot(data=counties, aes(x=LONGITUD,y=LATITUDE ))+geom_polygon(aes(group=group,color=LATITUDE))+geom_point(data=accident, aes(x=LONGITUD, y=LATITUDE))+xlim(c(-171, 250))
+
+#Create a counties variable for map data named county data frame
 counties <- map_data('county')
+#Rename counties long and lat to LONGITUD, LATITUDE
+counties <- counties %>% rename(LONGITUD =long)
+counties <- counties %>% rename(LATITUDE = lat)
+accident <- acc
+#Create var accident1 to summarize number of accidents by each COUNTY
+(accident1 <- accident %>% group_by(COUNTY) %>% summarise(`Number Of Accident`=n()))
+#Rename GLCs `County Code` to COUNTY
+GLCs <- GLCs %>% rename(COUNTY = `County Code`)
+#Change GLCs COUNTY type to numeric
+GLCs$COUNTY <- as.numeric(GLCs$COUNTY)
+#Create JoinTwo var to inner join two data frames GLCs and accident1 by COUNTY
+JoinTwo <- inner_join(GLCs, accident1, by="COUNTY")
+#Rename...
+JoinTwo <- JoinTwo %>% rename(region = `State Name`)
+#change JoinTwo region column to lower case
+JoinTwo$region <- tolower(JoinTwo$region)
+#Rename...
+JoinTwo <- JoinTwo %>% rename(subregion = `County Name`)
+#lower case
+JoinTwo$subregion <- tolower(JoinTwo$subregion)
+#Create car FinalJoin to inner join counties and JoinTwo by region and subregion
+FinalJoin <- inner_join(counties, JoinTwo, by=c("region","subregion"))
+#plot 
+ggplot(data = FinalJoin, aes(x=LONGITUD,y=LATITUDE))+geom_polygon(aes(group=group, fill=`Number Of Accident`))+ggtitle('choropleth map of accidents')
 
-glcs1<- glcs
-acc1 <- acc 
-counties1 <- counties
+```
 
-glcs1$STATE <- glcs1$`State Code`
-glcs1$COUNTY <- glcs1$`County Code`
 
-glcs1 <- glcs1 %>% select("STATE", "State Name", "COUNTY", "County Name")
-acc1 <- acc1 %>% select("STATE", "COUNTY", "ST_CASE")
+Q6: Can you find seasonal trends in accident occurrences in different states? Is summer or winter more dangerous? Why?
+```{r}
 
-geo1 <- acc1 %>% join(glcs1)
-geo1 <- geo1 %>% distinct()
-geo1$region <- geo1$`State Name`
-geo1$subregion <- geo1$`County Name`
-geo1 <- geo1 %>% select(-c("STATE", "COUNTY", "State Name", "County Name"))
-geo1$region <- tolower(geo1$region)
-geo1$subregion <- tolower(geo1$subregion)
-glcs_acc <- geo1 %>% group_by(region, subregion) %>% summarise(numAcc = n())
-final <- counties1 %>% join(glcs_acc)
+accident <- accident %>% filter(WEATHER < 98)
 
-ggplot(final, aes(x=long, y=lat, fill=numAcc)) + geom_polygon(aes(group=group)) + xlab("Longitude") + ylab("Latitude") + labs(fill = "Number of Accidents")
+Weather <- accident %>% group_by(STATE, WEATHER) %>% summarise(n=n())
+
+ggplot(Weather, aes(x=STATE, y=n, fill=WEATHER))+geom_bar(stat = "identity")+xlim(c(0,60))+
+  ylim(c(0, 3500))
+
 ```
