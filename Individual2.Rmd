@@ -58,9 +58,10 @@ sum(DrunkDri2$n)
 
 
 ```
-
+There are 8769 accidents with at least one drunk driver.
 
 Part two: Connecting Data
+
 Q1: Load the person table. Identify drivers (PER_TYP == 1, see fars manual) and subset on them.
 
 
@@ -155,7 +156,7 @@ accident <- accident %>% filter(WEATHER < 98)
 Weather <- accident %>% group_by(STATE, WEATHER) %>% summarise(n=n())
 
 ggplot(Weather, aes(x=STATE, y=n, fill=WEATHER))+geom_bar(stat = "identity")+xlim(c(0,60))+
-  ylim(c(0, 3500))
+  ylim(c(0, 3500))+ylab('Number of Accidents')
 
 ```
 
