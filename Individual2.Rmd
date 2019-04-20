@@ -125,13 +125,16 @@ counties <- map_data('county')
 counties <- counties %>% rename(LONGITUD =long)
 counties <- counties %>% rename(LATITUDE = lat)
 #Create var accident1 to summarize number of accidents by each COUNTY
-(accident1 <- accident %>% group_by(COUNTY) %>% summarise(`Number Of Accident`=n()))
+(accident1 <- accident %>% group_by(COUNTY,STATE) %>% summarise(`Number Of Accident`=n()))
 #Rename GLCs `County Code` to COUNTY
 GLCs <- GLCs %>% rename(COUNTY = `County Code`)
+GLCs <- GLCs %>% rename(STATE = `State Code`)
 #Change GLCs COUNTY type to numeric
 GLCs$COUNTY <- as.numeric(GLCs$COUNTY)
+GLCs$STATE <- as.numeric(GLCs$STATE)
 #Create JoinTwo var to inner join two data frames GLCs and accident1 by COUNTY
-JoinTwo <- inner_join(GLCs, accident1, by="COUNTY")
+JoinTwo <- inner_join(GLCs, accident1, by=c("COUNTY", "STATE"))
+JoinTwo <- JoinTwo %>% select(-c(`Old City Name`, `Date Record Added`))
 #Rename...
 JoinTwo <- JoinTwo %>% rename(region = `State Name`)
 #change JoinTwo region column to lower case
